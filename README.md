@@ -8,19 +8,30 @@ This project inserts a Squeeze-and-Excitation (SE) channel attention block into 
 
 ```bash
 conda activate learned-image-compression
+pip install -r requirements.txt
 ```
-
-Required packages: `compressai`, `pytorch-msssim`, `torch`, `torchvision`, `matplotlib`, `numpy`, `scipy`, `tensorboard`.
 
 ## Project Structure
 
 ```
-models.py      — SEBlock + SEScaleHyperprior model definition
-dataset.py     — CLIC 2020 and Kodak dataset loaders + download helpers
-train.py       — Training script for variants A, B, C
-evaluate.py    — Kodak evaluation (PSNR, MS-SSIM, bpp, BD-rate)
-plot.py        — Rate-distortion curve plotting
-run_all.sh     — End-to-end experiment pipeline
+├── README.md
+├── train.py                   # Training script for variants A, B, C
+├── evaluate.py                # Kodak evaluation (PSNR, MS-SSIM, bpp, BD-rate)
+├── plot.py                    # Rate-distortion curve plotting
+├── run_all.sh                 # End-to-end experiment pipeline
+├── requirements.txt
+├── models/
+│   ├── __init__.py
+│   ├── se_hyperprior.py       # SEScaleHyperprior model + weight transfer
+│   └── se_block.py            # Squeeze-and-Excitation module
+├── utils/
+│   ├── __init__.py
+│   ├── metrics.py             # PSNR, MS-SSIM, BD-rate
+│   └── datasets.py            # CLIC and Kodak dataloaders + download helpers
+├── configs/
+│   └── baseline.yaml          # Lambda values, lr, batch size, paths
+└── experiments/
+    └── results/               # Evaluation CSV/JSON outputs and plots
 ```
 
 ## Variants
@@ -43,7 +54,7 @@ Or run individual steps:
 
 ```bash
 # 1. Download datasets
-python dataset.py --data-dir data --dataset all
+python utils/datasets.py --data-dir data --dataset all
 
 # 2. Train (example: variant C, lambda=0.0067)
 python train.py --variant C --lmbda 0.0067 --data-dir data/clic --epochs 100
@@ -54,13 +65,13 @@ python evaluate.py --variant C --lmbda 0.0067 \
     --data-dir data/kodak
 
 # 4. Plot RD curves (after evaluating all variants and lambdas)
-python plot.py --results-dir results --output plots
+python plot.py --results-dir experiments/results --output experiments/plots
 ```
 
 ## Training Details
 
-- **Dataset**: CLIC 2020 (~1800 images), 256×256 random crops
-- **Evaluation**: Kodak PhotoCD (24 images, 768×512)
+- **Dataset**: CLIC 2020 (~1800 images), 256x256 random crops
+- **Evaluation**: Kodak PhotoCD (24 images, 768x512)
 - **Lambda values**: 0.0018, 0.0035, 0.0067, 0.013
 - **Optimizer**: Adam, lr=1e-4, ReduceLROnPlateau (factor=0.1, patience=10)
 - **Batch size**: 8

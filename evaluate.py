@@ -21,8 +21,8 @@ import torch
 from pytorch_msssim import ms_ssim
 from torch.utils.data import DataLoader
 
-from dataset import KodakDataset
-from models import SEScaleHyperprior, load_pretrained_baseline
+from utils.datasets import KodakDataset
+from models import SEScaleHyperprior, load_pretrained_baseline, QUALITY_TO_PARAMS
 
 
 def load_model(checkpoint_path, variant, quality=3):
@@ -34,11 +34,7 @@ def load_model(checkpoint_path, variant, quality=3):
         ckpt = torch.load(checkpoint_path, map_location="cpu", weights_only=True)
         model.load_state_dict(ckpt["state_dict"])
     elif variant == "C":
-        quality_to_params = {
-            1: (128, 192), 2: (128, 192), 3: (128, 192), 4: (128, 192),
-            5: (192, 320), 6: (192, 320), 7: (192, 320), 8: (192, 320),
-        }
-        N, M = quality_to_params[quality]
+        N, M = QUALITY_TO_PARAMS[quality]
         model = SEScaleHyperprior(N=N, M=M)
         ckpt = torch.load(checkpoint_path, map_location="cpu", weights_only=True)
         model.load_state_dict(ckpt["state_dict"])
@@ -95,50 +91,6 @@ def evaluate_model(model, data_loader, device):
     return results
 
 
-def compute_bd_rate(rate_a, psnr_a, rate_b, psnr_b):
-    """Compute BD-rate (Bjontegaard Delta Rate) between two RD curves.
-
-    Negative BD-rate means B is better (lower rate at same quality).
-    rate_a, psnr_a: reference curve (4 operating points)
-    rate_b, psnr_b: test curve (4 operating points)
-    """
-    # Sort by PSNR
-    idx_a = np.argsort(psnr_a)
-    idx_b = np.argsort(psnr_b)
-    psnr_a = np.array(psnr_a)[idx_a]
-    rate_a = np.log(np.array(rate_a)[idx_a])
-    psnr_b = np.array(psnr_b)[idx_b]
-    rate_b = np.log(np.array(rate_b)[idx_b])
-
-    # Need at least 4 points for cubic polynomial fit
-    if len(psnr_a) < 4 or len(psnr_b) < 4:
-        print("Warning: BD-rate requires 4 operating points, returning NaN")
-        return float("nan")
-
-    # Fit cubic polynomials: rate = f(psnr)
-    poly_a = np.polyfit(psnr_a, rate_a, 3)
-    poly_b = np.polyfit(psnr_b, rate_b, 3)
-
-    # Integration range
-    min_psnr = max(psnr_a.min(), psnr_b.min())
-    max_psnr = min(psnr_a.max(), psnr_b.max())
-
-    if min_psnr >= max_psnr:
-        return float("nan")
-
-    # Integrate
-    p_a = np.polyint(poly_a)
-    p_b = np.polyint(poly_b)
-
-    int_a = np.polyval(p_a, max_psnr) - np.polyval(p_a, min_psnr)
-    int_b = np.polyval(p_b, max_psnr) - np.polyval(p_b, min_psnr)
-
-    avg_diff = (int_b - int_a) / (max_psnr - min_psnr)
-    bd_rate = (np.exp(avg_diff) - 1) * 100
-
-    return bd_rate
-
-
 def main():
     parser = argparse.ArgumentParser(description="Evaluate on Kodak dataset")
     parser.add_argument("--checkpoint", type=str, default=None,
@@ -148,7 +100,7 @@ def main():
     parser.add_argument("--lmbda", type=float, default=None,
                         help="Lambda value (for labeling results)")
     parser.add_argument("--data-dir", default="data/kodak")
-    parser.add_argument("--output", default="results",
+    parser.add_argument("--output", default="experiments/results",
                         help="Output directory for results")
     args = parser.parse_args()
 

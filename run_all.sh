@@ -14,8 +14,8 @@ DATA_DIR="data"
 CLIC_DIR="$DATA_DIR/clic"
 KODAK_DIR="$DATA_DIR/kodak"
 CKPT_DIR="checkpoints"
-RESULTS_DIR="results"
-PLOTS_DIR="plots"
+RESULTS_DIR="experiments/results"
+PLOTS_DIR="experiments/plots"
 
 LAMBDAS=(0.0018 0.0035 0.0067 0.013)
 QUALITY=3
@@ -23,13 +23,13 @@ EPOCHS=100
 BATCH_SIZE=8
 
 echo "=== Step 1: Download datasets ==="
-python dataset.py --data-dir "$DATA_DIR" --dataset kodak
-python dataset.py --data-dir "$DATA_DIR" --dataset clic
+python utils/datasets.py --data-dir "$DATA_DIR" --dataset kodak
+python utils/datasets.py --data-dir "$DATA_DIR" --dataset clic
 
 echo ""
 echo "=== Step 2: Train all variants ==="
 
-# Variant A: save pretrained baseline (no training needed, one run covers all lambdas)
+# Variant A: save pretrained baseline (no training needed)
 for LMBDA in "${LAMBDAS[@]}"; do
     echo "--- Variant A, lambda=$LMBDA ---"
     python train.py --variant A --lmbda "$LMBDA" --quality $QUALITY \

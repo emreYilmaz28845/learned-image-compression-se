@@ -17,7 +17,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-from evaluate import compute_bd_rate
+from utils.metrics import compute_bd_rate
 
 
 LAMBDAS = [0.0018, 0.0035, 0.0067, 0.013]
@@ -114,8 +114,8 @@ def plot_rd_curves(data, output_dir, metric="psnr"):
 
 def main():
     parser = argparse.ArgumentParser(description="Plot RD curves")
-    parser.add_argument("--results-dir", default="results")
-    parser.add_argument("--output", default="plots")
+    parser.add_argument("--results-dir", default="experiments/results")
+    parser.add_argument("--output", default="experiments/plots")
     args = parser.parse_args()
 
     data = load_summaries(args.results_dir)

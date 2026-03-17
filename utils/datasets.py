@@ -1,13 +1,12 @@
-"""
-Dataset utilities for learned image compression.
+"""Dataset utilities for learned image compression.
 
 - CLICDataset: CLIC 2020 training images with random 256x256 crops
 - KodakDataset: Kodak PhotoCD evaluation images (padded to multiple of 64)
 - Download helpers for both datasets
 """
 
-import os
 import glob
+import os
 import urllib.request
 import zipfile
 from pathlib import Path
@@ -60,8 +59,6 @@ class KodakDataset(Dataset):
     def __getitem__(self, idx):
         img = Image.open(self.images[idx]).convert("RGB")
         w, h = img.size
-        # Pad to nearest multiple of 64 (needed for 4 stride-2 layers: 2^4 = 16,
-        # but 64 gives safe margin for any depth)
         pad_h = (64 - h % 64) % 64
         pad_w = (64 - w % 64) % 64
         transform = transforms.Compose([
@@ -69,7 +66,6 @@ class KodakDataset(Dataset):
             transforms.ToTensor(),
         ])
         tensor = transform(img)
-        # Return tensor and original size for cropping back after reconstruction
         return tensor, (h, w)
 
 
@@ -106,11 +102,10 @@ def download_clic(dest_dir):
         print(f"CLIC dataset already has {len(existing)} images at {dest}")
         return
 
-    # CLIC 2020 professional training set
     url = "https://data.vision.ee.ethz.ch/cvl/clic/professional_train_2020.zip"
     zip_path = dest / "clic_train.zip"
 
-    print(f"Downloading CLIC 2020 training set...")
+    print("Downloading CLIC 2020 training set...")
     print(f"URL: {url}")
     print("This may take a while (~2GB)...")
 

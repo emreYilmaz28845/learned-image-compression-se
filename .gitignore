@@ -1,3 +1,16 @@
 .vscode/
-_pycache__/
 __pycache__/
+*.pyc
+*.pyo
+
+# Data and outputs
+data/
+checkpoints/
+experiments/results/
+experiments/plots/
+
+# Environment
+.env
+*.egg-info/
+dist/
+build/

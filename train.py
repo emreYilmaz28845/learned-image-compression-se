@@ -23,7 +23,7 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from pytorch_msssim import ms_ssim
 
-from dataset import CLICDataset
+from utils.datasets import CLICDataset
 from models import load_pretrained_with_se, load_pretrained_baseline
 
 
